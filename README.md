@@ -10,5 +10,5 @@ A c program for circuit simulations
 
 ## How to use
 
-Open main.cp and compile.
+Open main.c and compile.
 
