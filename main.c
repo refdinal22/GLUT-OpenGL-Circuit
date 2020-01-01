@@ -75,6 +75,7 @@ void initTexture() {
 	_textureSupport = LoadTexBMP("texture/support.bmp");
 	_textureAsphalt = LoadTexBMP("texture/asphalt.bmp");
 	_textureGarageDoor = LoadTexBMP("texture/garage-door.bmp");
+	_textureSidewalk = LoadTexBMP("texture/sidewalk.bmp");
 }
 
 static void cube(double x,double y,double z,
@@ -148,6 +149,24 @@ static void cube(double x,double y,double z,
    glPopMatrix();
 }
 
+static void support(double x, double y, double z)
+{
+   glBindTexture(GL_TEXTURE_2D,_textureSupport );
+   glPushMatrix();
+      glTranslated(x,y,z);
+      cube(0,-0.05,-0.5, 2,0.15,0.2, 0);
+   glPopMatrix();
+}
+
+static void road(double x, double y, double z)
+{
+   glBindTexture(GL_TEXTURE_2D,_textureAsphalt );
+   glPushMatrix();
+      glTranslated(x,y,z);
+      cube(0,-0.05,-0.5, 2,0.15,1, 0);
+   glPopMatrix();
+}
+
 static void pitstop(double x, double y, double z)
 {
    glBindTexture(GL_TEXTURE_2D,_textureSupport);
@@ -189,7 +208,27 @@ static void pitstop(double x, double y, double z)
            glTexCoord2f(0.0,texRepY); glVertex3f(-1.5, 1.2, 0.9);
         glEnd();
    glPopMatrix();
+   //Floor
+   glBindTexture(GL_TEXTURE_2D,_textureSidewalk );
+   glPushMatrix();
+      glTranslated(x,y,z);
+      cube(0,-0.05,0.9, 2,0.15,0.1, 0);
+   glPopMatrix();
+   
+   //Sidewalk
+   glPushMatrix();
+       glTranslated(x,0, 0);
+       cube(0,-0.05,-0.5, 2,0.15,0.5, 0); // Along Street
+       glTranslated(0,0, 1);
+       cube(0,-0.05,-0.5, 2,0.15,0.5, 0); // Along Street
+   glPopMatrix();
+   //
+   support(x,y, z+3.7);
+   //Road
+   road(x, y,z+4.91);
 }
+
+
 
 static void skybox(float dim) {
    glBindTexture(GL_TEXTURE_2D,_textureSkyboxFront);
