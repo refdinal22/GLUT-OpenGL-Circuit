@@ -38,6 +38,9 @@ double fpX = 0;
 double fpY = 0.7;
 double fpZ = -0.3;
 
+float xPos = -6;
+
+   int degree = 15; 
 //x, y, z for refrence point in glLookAt() for FP mode
 double refX = 10;
 double refY = 0;
@@ -69,7 +72,9 @@ void initTexture() {
 	_textureSkyboxLeft = LoadTexBMP("texture/skybox-left.bmp");
 	_textureSkyboxTop = LoadTexBMP("texture/skybox-top.bmp");
 	_textureBrownBrick = LoadTexBMP("texture/brown-brick.bmp");
-	_textureSupport = LoadTexBMP("texture/support.bmp");;
+	_textureSupport = LoadTexBMP("texture/support.bmp");
+	_textureAsphalt = LoadTexBMP("texture/asphalt.bmp");
+	_textureGarageDoor = LoadTexBMP("texture/garage-door.bmp");
 }
 
 static void cube(double x,double y,double z,
@@ -149,18 +154,41 @@ static void pitstop(double x, double y, double z)
    glPushMatrix();
    //  Offset
    glTranslated(x,y,z);
-//   1, 0 ,-2
    //Building
-   texScale = 0.5;
    cube(0,1.6,0, 2,0.4,1, 0); //Top
    
    glBindTexture(GL_TEXTURE_2D,_textureBrownBrick);
    glPushMatrix();
-   cube(-1.75,0.65,0, 0.25,0.55,1, 0); //Left
-   cube(1.75,0.65,0, 0.25,0.55,1, 0); //Right
-   cube(0,0.65,0, 0.2,0.55,1, 0); //Middle
+       cube(-1.75,0.65,0, 0.25,0.55,1, 0); //Left
+       cube(1.75,0.65,0, 0.25,0.55,1, 0); //Right
+       cube(0,0.65,0, 0.2,0.55,1, 0); //Middle
    glPopMatrix();   
    
+   float texRepX = 1.0;
+   float texRepY = 1.0;   
+   //Door left
+   glBindTexture(GL_TEXTURE_2D,_textureGarageDoor);
+   glPushMatrix();
+      glTranslated(x,y,z);
+       glBegin(GL_QUADS);
+           //Left
+           glTexCoord2f(0.0,0.0); glVertex3f(-1.5, 0.1, 0.9);
+           glTexCoord2f(texRepX,0.0); glVertex3f(-0.2, 0.1, 0.9);
+           glTexCoord2f(texRepX,texRepY); glVertex3f(-0.2, 1.2, 0.9);
+           glTexCoord2f(0.0,texRepY); glVertex3f(-1.5, 1.2, 0.9);
+        glEnd();
+   glPopMatrix();  
+   //Door Right     
+   glPushMatrix();
+      glTranslated(x+1.7,y,z);
+       glBegin(GL_QUADS);         
+           //Left
+           glTexCoord2f(0.0,0.0); glVertex3f(-1.5, 0.1, 0.9);
+           glTexCoord2f(texRepX,0.0); glVertex3f(-0.2, 0.1, 0.9);
+           glTexCoord2f(texRepX,texRepY); glVertex3f(-0.2, 1.2, 0.9);
+           glTexCoord2f(0.0,texRepY); glVertex3f(-1.5, 1.2, 0.9);
+        glEnd();
+   glPopMatrix();
 }
 
 static void skybox(float dim) {
@@ -279,10 +307,12 @@ void display()
    skybox(64);
    
    //PitStop
-//  pitstop(1, 0, -2);   
-//   pitstop(3, 0, -2);
-//   pitstop(-1, 0, -2);
+   pitstop(1, 0, -2);   
+   pitstop(5, 0, -2);
+   pitstop(-3, 0, -2);
+   
    glutSwapBuffers();
+   
 }
 
 /*
