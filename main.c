@@ -14,12 +14,13 @@
 #include "project.c"
 #ifndef GL_CLAMP_TO_EDGE
 #define GL_CLAMP_TO_EDGE 0x812F
-#define ROAD_WIDTH 5
-#define ROAD_THICK 0.3
+#define ROAD_WIDTH 2
+#define ROAD_THICK 0.15
 #define CUBE_TOP_LEFT 1
 #define CUBE_TOP_RIGHT 2
 #define CUBE_BOTTOM_LEFT 3
 #define CUBE_BOTTOM_RIGHT 4
+#define ANGLE_TURN 6
 #endif
 
 int mode=0;       //  Projection mode
@@ -28,7 +29,7 @@ int th=105;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
 double asp=1.333;  //  Aspect ratio
-double dim=8;   //  Size of world
+double dim=11;   //  Size of world
 
 // Light values
 int one       =   1;  // Unit value
@@ -43,11 +44,17 @@ int zh        =  90;  // Light azimuth
 int step= 0;
 //First person camera location
 double fpX = 0;
-double fpY = 0.7;
+double fpY = 0.8;
 double fpZ = 0;
 
 float xPos = -6;
 int carRotate = 0;
+
+double xRotateTurn = 0;
+double ZRotateTurn = 0;
+double turnXInc = 0;
+double turnZInc = 0;
+
 //Camera
 float centerXIncrement = 0;
 float centerZIncrement = 0;
@@ -704,11 +711,9 @@ static void pitstop(double x, double y, double z)
    glPushMatrix();
    //  Offset
    glTranslated(x,y,z);
-   //Building
-   cube(0,1.6,0, 2,0.4,1, 0); //Top
-   
-   glBindTexture(GL_TEXTURE_2D,_textureBrownBrick);
-   glPushMatrix();
+       //Building
+       cube(0,1.6,0, 2,0.4,1, 0); //Top   
+       glBindTexture(GL_TEXTURE_2D,_textureBrownBrick);
        cube(-1.75,0.65,0, 0.25,0.55,1, 0); //Left
        cube(1.75,0.65,0, 0.25,0.55,1, 0); //Right
        cube(0,0.65,0, 0.2,0.55,1, 0); //Middle
@@ -749,9 +754,9 @@ static void pitstop(double x, double y, double z)
    //Sidewalk
    glPushMatrix();
        glTranslated(x,0, 0);
-       cube(0,-0.05,-0.5, 2,0.15,0.5, 0); // Along Street
+       cube(0,-0.05,z+1.5, 2,0.15,0.5, 0); // Along Street
        glTranslated(0,0, 1);
-       cube(0,-0.05,-0.5, 2,0.15,0.5, 0); // Along Street
+       cube(0,-0.05,z+1.5, 2,0.15,0.5, 0); // Along Street
    glPopMatrix();
    //
    support(x,y, z+3.7);
@@ -847,9 +852,9 @@ static void straightRoad(double tx, double ty, double tz, double roadLong, doubl
         break;
         
       case CUBE_BOTTOM_LEFT :
-        xt = tx - ROAD_WIDTH;
+        xt = tx - roadLong;
         yt = ty + ROAD_THICK;
-        zt = tz - roadLong; 
+        zt = tz - ROAD_WIDTH; 
         break;
         
       case CUBE_BOTTOM_RIGHT :
@@ -867,16 +872,67 @@ static void straightRoad(double tx, double ty, double tz, double roadLong, doubl
    
    glEnable(GL_TEXTURE_2D);
    glBindTexture(GL_TEXTURE_2D,_textureAsphalt);     
-   
-   glTranslated(xt, yt, zt);
+      
    glPushMatrix();
-   	   //  Enable Texture
+      glTranslated(xt, yt, zt);
       glRotated(degree,0,1,0);
       glTranslated(-xt, -yt, -zt);
-      cube(tx, ty, tz, ROAD_WIDTH, ROAD_THICK, roadLong, 0);
-      
+      cube(tx, ty, tz, roadLong, ROAD_THICK, ROAD_WIDTH, 0);
    glPopMatrix();
 }
+
+static void turnRoad(double tx, double ty, double tz, double roadLong){
+     straightRoad(tx, ty, tz, 1, -15, CUBE_BOTTOM_LEFT);
+     straightRoad(tx+1.5, ty, tz+0.15, 1, -30, CUBE_BOTTOM_LEFT);
+     straightRoad(tx+3.8, ty, tz+1, 1, -45, CUBE_BOTTOM_LEFT);
+     straightRoad(tx+5, ty, tz+3, 1, -60, CUBE_BOTTOM_LEFT);
+     straightRoad(tx+6, ty, tz+4.2, 1, -75, CUBE_BOTTOM_LEFT);
+}
+
+static void circuit(){
+   //Main Road
+   straightRoad(1, -0.05, -2, 12, 0, 0);
+   
+   //Turn 1
+   turnRoad(14, -0.05, -2, 1);
+   //Straight 2
+   glPushMatrix();
+      glTranslated(19.3,0,7.8);
+      glRotated(90,0,1,0);
+      straightRoad(1, -0.05, -2, 5, 0, 0);
+   glPopMatrix();
+   //Turn 2
+      glPushMatrix();
+      glTranslated(15.25,0,-1.5);
+      glRotated(-90,0,1,0);
+      turnRoad(14, -0.05, -2, 1);
+   glPopMatrix();
+   //Straight 3
+   glPushMatrix();
+      glTranslated(0.5,0,17.8);
+      straightRoad(1, -0.05, -2, 12, 0, 0);
+   glPopMatrix();
+   
+   //Turn 3
+      glPushMatrix();
+      glTranslated(3,0,13.8);
+      glRotated(-180,0,1,0);
+      turnRoad(14, -0.05, -2, 1);
+   glPopMatrix();
+   //Straight 3
+   glPushMatrix();
+      glTranslated(-12.3,0,7.8);
+      glRotated(90,0,1,0);
+      straightRoad(1, -0.05, -2, 5, 0, 0);
+   glPopMatrix();
+   //Turn 4
+      glPushMatrix();
+      glTranslated(-12.5,0,15.2);
+      glRotated(-270,0,1,0);
+      turnRoad(14, -0.05, -2, 1);
+   glPopMatrix();    
+}
+
 
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -927,11 +983,12 @@ void display()
    else
    {
       refX = ((dim * Sin(thf)) + fpX ) + centerXIncrement;     
-      refY = (dim * Sin(ph)) + fpY;
+      refY = (dim * Sin(ph))+ fpY;
       refZ = (dim * -Cos(thf)) + fpZ + centerZIncrement;
    
       glRotated(-carRotate2,0,1,0);      
-        gluLookAt(-1+centerXIncrement, 0.8 ,2.3+centerZIncrement , 8.210370+centerXIncrement,refY,1.941143+centerZIncrement, 0,1,0);          
+//        gluLookAt(-1+centerXIncrement, 0.8 ,2.3+centerZIncrement , 8.210370+centerXIncrement,refY,1.941143+centerZIncrement, 0,1,0);          
+          gluLookAt(-1+centerXIncrement, 0.8 ,-2.7+centerZIncrement , 8.210370+centerXIncrement,refY,-3.058857+centerZIncrement, 0,1,0);          
    }
 
    //Draw scene
@@ -939,13 +996,30 @@ void display()
    skybox(64);
    
    //PitStop
-   pitstop(1, 0, -2);   
-   pitstop(5, 0, -2);
-   pitstop(-3, 0, -2);
+   pitstop(1, 0, -10);   
+   pitstop(5, 0, -10);
+   pitstop(-3, 0, -10);
    
+   //pit top to road
+   glPushMatrix();
+      glRotated(-40,0,1,0);
+      glTranslated(-11.8,0,-7.8);
+      road(15, 0, -0.09);
+   glPopMatrix();
+   
+   glPushMatrix();
+      glRotated(40,0,1,0);
+      glTranslated(-16.5,0,-6.5);
+      road(15, 0, -0.09);
+   glPopMatrix();
+   
+   //Draw Circuit
+   circuit();
+      
    //Blue car
-   car(-1+centerXIncrement,0.2,2.3+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
-   
+   car(-1+centerXIncrement,0.2,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
+
+   texScale = 0.5;
    glutSwapBuffers();
    
 }
@@ -1036,24 +1110,24 @@ void key(unsigned char ch,int x,int y)
    else if(ch == 'd' || ch == 'D')
       {
           temp = xRotate;
-          xRotate = xRotate*Cos(-15) + zRotate * Sin(-15);
-          zRotate = -temp*Sin(-15)+zRotate*Cos(-15);
+          xRotate = xRotate*Cos(-ANGLE_TURN) + zRotate * Sin(-ANGLE_TURN);
+          zRotate = -temp*Sin(-ANGLE_TURN)+zRotate*Cos(-ANGLE_TURN);
           centerXIncrement += xRotate;
           centerZIncrement += zRotate;
           
           thf += 15;
-          carRotate2 -= 15;
+          carRotate2 -= ANGLE_TURN;
           step++;
           
       }
    else if(ch == 'a' || ch == 'A')
    {
           temp = xRotate;          
-          xRotate = xRotate*Cos(15) + zRotate * Sin(15);
-          zRotate = -temp*Sin(15)+zRotate*Cos(15);
+          xRotate = xRotate*Cos(ANGLE_TURN) + zRotate * Sin(ANGLE_TURN);
+          zRotate = -temp*Sin(ANGLE_TURN)+zRotate*Cos(ANGLE_TURN);
           centerXIncrement += xRotate;
           centerZIncrement += zRotate;
-          carRotate2 += 15;    
+          carRotate2 += ANGLE_TURN;    
    }   
          
    th %= 360;        
@@ -1101,3 +1175,4 @@ int main(int argc,char* argv[])
    glutMainLoop();
    return 0;
 }
+
