@@ -28,6 +28,7 @@ float thf=105;
 int th=105;         //  Azimuth of view angle
 int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
+int light=1;      //  Lighting
 double asp=1.333;  //  Aspect ratio
 double dim=11;   //  Size of world
 
@@ -39,7 +40,14 @@ int emission  =  30;  // Emission intensity (%)
 int ambient   =  80;  // Ambient intensity (%)
 int diffuse   = 100;  // Diffuse intensity (%)
 int specular  =   0;  // Specular intensity (%)
-int zh        =  90;  // Light azimuth
+int shininess =   0;  // Shininess (power of two)
+float shiny   =   1;  // Shininess (value)
+int zh        =  0;  // Light azimuth
+float ylight  = 13;  // Elevation of light
+
+int at0=100;      //  Constant  attenuation %
+int at1=20;        //  Linear    attenuation %
+int at2=20;        //  Quadratic attenuation %
 
 int step= 0;
 //First person camera location
@@ -95,7 +103,15 @@ GLuint	_textureBasicMetal, _textureGlass, _textureWheel, _textureTire,
 		_textureWarehouseWindow, _textureSupport;
 ;
 
-void initTexture() {
+void initTexture() { 
+     Ambient[0] = (20 / 255) * 0.8; 
+      Ambient[1] = (60 / 255) * 0.8;
+      Ambient[2] = (180 / 255) * 0.8;
+
+      Diffuse[0] = 0;
+      Diffuse[1] = 0;
+      Diffuse[2] = 0;
+      
 	_textureSkyboxFront = LoadTexBMP("texture/skybox-front.bmp");
 	_textureSkyboxBack = LoadTexBMP("texture/skybox-back.bmp");
 	_textureSkyboxRight = LoadTexBMP("texture/skybox-right.bmp");
@@ -105,17 +121,16 @@ void initTexture() {
 	_textureSupport = LoadTexBMP("texture/support.bmp");
 	_textureAsphalt = LoadTexBMP("texture/asphalt.bmp");
 	_textureGarageDoor = LoadTexBMP("texture/garage-door.bmp");
-	_textureSidewalk = LoadTexBMP("texture/sidewalk.bmp");
-	
+	_textureSidewalk = LoadTexBMP("texture/sidewalk.bmp");	
 	_textureBasicMetal = LoadTexBMP("texture/basic-metal.bmp");
 	_textureGlass = LoadTexBMP("texture/glass.bmp");
     _textureWheel = LoadTexBMP("texture/car-wheel.bmp");
     _textureTire = LoadTexBMP("texture/tire-tread.bmp");
-
 	_textureCarGrill = LoadTexBMP("texture/car-grill.bmp");
 	_textureHeadLamp = LoadTexBMP("texture/headlamp.bmp");
 	_textureGlass = LoadTexBMP("texture/glass.bmp");
 	_textureCarbonFiber = LoadTexBMP("texture/carbon-fiber.bmp");
+	_textureGreyBrick = LoadTexBMP("texture/grey-brick.bmp");
 }
 
 static void cube(double x,double y,double z,
@@ -203,10 +218,17 @@ static void body(double x,double y,double z,
                  double th,
                  int w)
 {
+ //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
    glBindTexture(GL_TEXTURE_2D,_textureBasicMetal);
    texScale = 0.1;
 
- //  glEnable(GL_POLYGON_OFFSET_FILL);
+   glEnable(GL_POLYGON_OFFSET_FILL);
 
    //  Save transformation
    glPushMatrix();
@@ -293,6 +315,13 @@ static void wheel(double x,double y,double z,
                  int d,
                  int s)
 {
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   //Turn off shininess for the rubber tire
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,0);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
    //  Save transformation
    glPushMatrix();
    //  Offset
@@ -301,7 +330,8 @@ static void wheel(double x,double y,double z,
    glScaled(dx,dy,dz);
 
    glBindTexture(GL_TEXTURE_2D,_textureWheel);
-
+   
+   glColor3f(0.8,0.8,0.8);
    //Tire
    glBegin(GL_TRIANGLE_FAN);
    glNormal3f(0, 0, -1);
@@ -330,8 +360,9 @@ static void wheel(double x,double y,double z,
    glBindTexture(GL_TEXTURE_2D, _textureTire);
 
 //   
-   glBegin(GL_QUAD_STRIP);
    glColor3f(0.5,0.5,0.55);
+   glBegin(GL_QUAD_STRIP);
+
    for (th=0;th<=360;th+=s)
    {
       double ph = d-90;
@@ -353,6 +384,13 @@ static void bumper(double x,double y,double z,
                  double th,
                  int m)
 {
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   
    //  Save transformation
    glPushMatrix();
    //  Offset
@@ -454,6 +492,26 @@ static void bumper(double x,double y,double z,
       glTexCoord2f(0.0,1.0); glVertex3f(0.1, 0.15, -0.18);
       glEnd();
    }
+   
+   //Lights (taillights or headlights)
+   float emColor[4];
+   if(m == 1) {
+      emColor[0] = 1.0 * emission;
+      emColor[1] = 1.0 * emission;
+      emColor[2] = 0.8 * emission;
+      emColor[3] = 1.0 * emission;
+      glColor3f(1, 1, 0.8);
+   } else {
+      emColor[0] = 0.8 * emission;
+      emColor[1] = 0.0 * emission;
+      emColor[2] = 0.0 * emission;
+      emColor[3] = 1.0 * emission;
+      glColor3f(.8, 0, 0);
+   }
+
+   glMaterialf(GL_FRONT,GL_SHININESS,0);
+   glMaterialfv(GL_FRONT,GL_SPECULAR,emColor);
+   glMaterialfv(GL_FRONT,GL_EMISSION,emColor);
 
    glBindTexture(GL_TEXTURE_2D,_textureHeadLamp);
 
@@ -480,6 +538,11 @@ static void bumper(double x,double y,double z,
    glEnd();
 
    glEnable(GL_POLYGON_OFFSET_FILL);
+
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+
    //Undo transformations
    glPopMatrix();  
 }
@@ -489,6 +552,13 @@ static void car(double x,double y,double z,
                  double th,
                  float cr, float cb, float cg)
 {
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   
    //  Save transformation
    glPushMatrix();
    //  Offset
@@ -496,7 +566,7 @@ static void car(double x,double y,double z,
    glRotated(th,0,1,0);
    glScaled(dx,dy,dz);
    
-  // glPolygonOffset(1,1);
+   glPolygonOffset(1,1);
 
    wheel(0.6,0,0.4, 1,1,1, 0, 8, 10);
    wheel(-0.6,0,-0.4, 1,1,1, 0, 8, 10);
@@ -508,8 +578,8 @@ static void car(double x,double y,double z,
    //Lower Body
    body(0,0.1,0, 0.8,0.1,0.4, 0, 0);
    //Cabin
-   body(-0.1,0.3,0, 0.3,0.1,0.35, 0, 1);
-
+   glColor3f(cr, cb, cg);
+  
    texScale = 1.0;
 
    glColor3f(cr, cb, cg);
@@ -521,6 +591,11 @@ static void car(double x,double y,double z,
 
    //Rear Bumper
    bumper(-0.8,0,0, 1,1,1, 180, 0);
+   
+   //  Set specular color to white
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
    
    glEnable(GL_POLYGON_OFFSET_FILL);
 
@@ -679,14 +754,12 @@ static void car(double x,double y,double z,
    glTexCoord2f(texRepX, texRepY); glVertex3f(-0.68,0.31,0.35);
    
    glEnd();
-
+   
    //Undo transformations
    glPopMatrix();
 }
 
 //Car End
-
-
 static void support(double x, double y, double z)
 {
    glBindTexture(GL_TEXTURE_2D,_textureSupport );
@@ -698,15 +771,30 @@ static void support(double x, double y, double z)
 
 static void road(double x, double y, double z)
 {
-   glBindTexture(GL_TEXTURE_2D,_textureAsphalt );
+   glBindTexture(GL_TEXTURE_2D,_textureAsphalt);
    glPushMatrix();
       glTranslated(x,y,z);
       cube(0,-0.05,-0.5, 2,0.15,1, 0);
    glPopMatrix();
 }
 
+static void lightRoad(double x, double y, double z)
+{
+   glBindTexture(GL_TEXTURE_2D,_textureAsphalt);
+   glPushMatrix();
+      glTranslated(x,y,z);
+      cube(0,-0.05,-0.5, 0.3,0.5,0.3, 0);
+   glPopMatrix();
+}
+
 static void pitstop(double x, double y, double z)
 {
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+           
    glBindTexture(GL_TEXTURE_2D,_textureSupport);
    glPushMatrix();
    //  Offset
@@ -762,9 +850,9 @@ static void pitstop(double x, double y, double z)
    support(x,y, z+3.7);
    //Road
    road(x, y,z+4.91);
+   
+//      road(x, y,z+8);
 }
-
-
 
 static void skybox(float dim) {
        
@@ -778,7 +866,6 @@ static void skybox(float dim) {
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
    
    glColor3f(0.7, 0.7, 0.7);
-   
    glBindTexture(GL_TEXTURE_2D,_textureSkyboxFront);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -838,6 +925,8 @@ static void skybox(float dim) {
 static void straightRoad(double tx, double ty, double tz, double roadLong, double degree, int edge)
 {
     int xt, yt, zt;   
+   
+//   glPushMatrix();
     switch (edge) {
       case CUBE_TOP_LEFT :
         xt = tx + ROAD_WIDTH;
@@ -869,11 +958,9 @@ static void straightRoad(double tx, double ty, double tz, double roadLong, doubl
         zt = 0; 
         break;
     }
-   
-   glEnable(GL_TEXTURE_2D);
-   glBindTexture(GL_TEXTURE_2D,_textureAsphalt);     
-      
-   glPushMatrix();
+
+   glBindTexture(GL_TEXTURE_2D,_textureAsphalt);       
+   glPushMatrix();      
       glTranslated(xt, yt, zt);
       glRotated(degree,0,1,0);
       glTranslated(-xt, -yt, -zt);
@@ -890,19 +977,35 @@ static void turnRoad(double tx, double ty, double tz, double roadLong){
 }
 
 static void circuit(){
-   //Main Road
-   straightRoad(1, -0.05, -2, 12, 0, 0);
+       
+   //  Set specular color to white
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,1);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
    
+   glColor3f(0.7, 0.7, 0.7);       
+   //Main Road
+   int i;
+   int inc=2;
+   for(i=0;i<6;i++){
+      straightRoad(-11+inc, -0.05, -2, 2, 0, 0);
+      inc+=4;
+   }
+//   straightRoad(-7, -0.05, -2, 2, 0, 0);
    //Turn 1
    turnRoad(14, -0.05, -2, 1);
    //Straight 2
    glPushMatrix();
       glTranslated(19.3,0,7.8);
       glRotated(90,0,1,0);
-      straightRoad(1, -0.05, -2, 5, 0, 0);
+      for(i=0;i<9;i++){
+        straightRoad(-3+i, -0.05, -2, 1, 0, 0);
+      }
    glPopMatrix();
    //Turn 2
-      glPushMatrix();
+   glPushMatrix();
       glTranslated(15.25,0,-1.5);
       glRotated(-90,0,1,0);
       turnRoad(14, -0.05, -2, 1);
@@ -910,11 +1013,16 @@ static void circuit(){
    //Straight 3
    glPushMatrix();
       glTranslated(0.5,0,17.8);
-      straightRoad(1, -0.05, -2, 12, 0, 0);
+//      straightRoad(1, -0.05, -2, 12, 0, 0);
+       inc=2;
+       for(i=0;i<6;i++){
+         straightRoad(-11+inc, -0.05, -2, 2, 0, 0);
+          inc+=4;
+       }
    glPopMatrix();
    
    //Turn 3
-      glPushMatrix();
+   glPushMatrix();
       glTranslated(3,0,13.8);
       glRotated(-180,0,1,0);
       turnRoad(14, -0.05, -2, 1);
@@ -923,14 +1031,27 @@ static void circuit(){
    glPushMatrix();
       glTranslated(-12.3,0,7.8);
       glRotated(90,0,1,0);
-      straightRoad(1, -0.05, -2, 5, 0, 0);
+      //straightRoad(1, -0.05, -2, 5, 0, 0);
+      for(i=0;i<9;i++){
+        straightRoad(-3+i, -0.05, -2, 1, 0, 0);
+      }
    glPopMatrix();
    //Turn 4
-      glPushMatrix();
+   glPushMatrix();
       glTranslated(-12.5,0,15.2);
       glRotated(-270,0,1,0);
       turnRoad(14, -0.05, -2, 1);
    glPopMatrix();    
+}
+
+void stand(double x, double y, double z, double height, double width, double lz){
+
+     glBindTexture(GL_TEXTURE_2D,_textureGreyBrick);    
+          
+     glPushMatrix();
+        cube(x, y, z, width, height, lz, 0);
+        cube(x, y+1, z, width, 0.2, lz-0.8, 0);
+     glPopMatrix();
 }
 
 
@@ -946,6 +1067,7 @@ void display()
 
    //Enable Textures
    glEnable(GL_TEXTURE_2D);
+//   glEnable(GL_NORMALIZE);
 
    //  Undo previous transformations
    glLoadIdentity();
@@ -1013,13 +1135,57 @@ void display()
       road(15, 0, -0.09);
    glPopMatrix();
    
-   //Draw Circuit
+   //Draw Circuit  
+   //road(2, 0, -0.5);
+   
    circuit();
+   
+   //Light
+   int i=0;
+   while(i<20){
+      lightRoad(-6+i, 0.3, 0.8);
+      i+=4;
+   }
+   
+   //Stand
+  // stand(1, 0.5, 2, 0.7, 8, 2);
       
    //Blue car
-   car(-1+centerXIncrement,0.2,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
-
+   glPushMatrix();
+      car(-1+centerXIncrement,0.2,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
+   glPopMatrix();
+   
+   glPushMatrix();
+      car(-1+centerXIncrement,0.2,-1+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
+   glPopMatrix();
+      
    texScale = 0.5;
+   glEnable(GL_LIGHT1);
+     glPushMatrix();
+      
+      float amb[4] = {0,0,0,0};
+      float dif[4] = {1,1,1,1}; //White
+      float spec[4] = {0,0,0,1};
+      float pos[4] = {-1+centerXIncrement,0.8,-2.7+centerZIncrement,1.0};
+      //Red Light
+      glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);
+      glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
+      glLightfv(GL_LIGHT1,GL_SPECULAR,spec);
+      glLightfv(GL_LIGHT1,GL_POSITION,pos);
+
+      glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION ,at0/100.0);
+      glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION   ,at1/100.0);
+      glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,at2/100.0);
+
+      //Red Light
+      float redEm[4] = {1,1,1,1};
+      glMaterialf(GL_FRONT,GL_SHININESS,0);
+      glMaterialfv(GL_FRONT,GL_SPECULAR,redEm);
+      glMaterialfv(GL_FRONT,GL_EMISSION,redEm);
+      glColor3f(0.5, 0, 0);
+      cube(-1+centerXIncrement,0.5,-2.7+centerZIncrement, 0.07,0.02,0.1, 0);
+   glPopMatrix(); 
+
    glutSwapBuffers();
    
 }
