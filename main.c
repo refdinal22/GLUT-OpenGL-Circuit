@@ -130,6 +130,8 @@ void initTexture() {
 	_textureCarbonFiber = LoadTexBMP("texture/carbon-fiber.bmp");
 	_textureGreyBrick = LoadTexBMP("texture/grey-brick.bmp");
 	_textureGrass = LoadTexBMP("texture/grass.bmp");
+	_textureWoodBeam = LoadTexBMP("texture/wood-beam.bmp");
+	_textureMetalRoof = LoadTexBMP("texture/metal-roof.bmp");
 }
 
 static void cube(double x,double y,double z,
@@ -321,6 +323,7 @@ static void wheel(double x,double y,double z,
    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,0);
    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
    glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   
    //  Save transformation
    glPushMatrix();
    //  Offset
@@ -357,8 +360,7 @@ static void wheel(double x,double y,double z,
    glEnd();
 
    glBindTexture(GL_TEXTURE_2D, _textureTire);
-
-//   
+  
    glColor3f(0.5,0.5,0.55);
    glBegin(GL_QUAD_STRIP);
 
@@ -853,8 +855,7 @@ static void pitstop(double x, double y, double z)
 //      road(x, y,z+8);
 }
 
-static void skybox(float dim) {
-       
+static void skybox(float dim) {       
    glDisable(GL_POLYGON_OFFSET_FILL);
 
    //  Set specular color to white
@@ -1042,12 +1043,36 @@ static void circuit(){
 
 void stand(double x, double y, double z, double height, double width, double lz){
 
+     double initialStandz = 0.5;
+     double initialStandy = 1.2;
+     
      glBindTexture(GL_TEXTURE_2D,_textureGreyBrick);    
           
      glPushMatrix();
-        cube(x, y, z, width, height, lz, 0);
-        cube(x, y+1, z, width, 0.2, lz-0.8, 0);
+        cube(x, y+0.2, z, width, height-0.2, lz, 0);        
+        texScale = 0.5;
+        glBindTexture(GL_TEXTURE_2D,_textureWoodBeam);
+        
+        //Sit
+        int i;
+        for (i=0;i<5;i++){
+            cube(x, y+initialStandy, z+initialStandz, width, 0.2, lz-initialStandz, 0); 
+            
+            initialStandz += 0.2;
+            initialStandy += 0.2;   
+        }
+        
+        cube(x, y+2.6, z+2, width, 0.2, lz-2, 0);
      glPopMatrix();
+     
+     glPushMatrix();
+     glBindTexture(GL_TEXTURE_2D, _textureMetalRoof);
+       glRotated(10, 1,0,0);
+       glTranslated(0, 0.4,-0.65);
+       cube(x, y+3, z, width, 0.1, lz, 0);                     
+     glPopMatrix();
+     
+     
 }
 
 void grass(double x, double y, double z, double width){
@@ -1070,11 +1095,17 @@ void setLighting(){
         Diffuse[0] = 1;          Diffuse[1] = 1;          Diffuse[2] = 1;
         //Disable Lighting
         glDisable(GL_LIGHT1);     
+        glDisable(GL_LIGHT2);
+        glDisable(GL_LIGHT3);    
+        glDisable(GL_LIGHT4);
+        glDisable(GL_LIGHT5);
+        glDisable(GL_LIGHT6);
      }     
      else{
           //Setting For Night
           Ambient[0] = (20 / 255) * 0.8;           Ambient[1] = (60 / 255) * 0.8;          Ambient[2] = (180 / 255) * 0.8;
           Diffuse[0] = 0;          Diffuse[1] = 0;          Diffuse[2] = 0;
+          
           //Car Light          
           glEnable(GL_LIGHT1);
           glEnable(GL_LIGHT2);
@@ -1089,6 +1120,7 @@ void setLighting(){
          
 //Light lampu mobil
 //float carPosition[4] = {-1+centerXIncrement,0.8,-2.7+centerZIncrement,1.0};
+
          float ligthStand1[4] = {-4,6,-2.7, 1.0};
          //White Light
          glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);              glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
@@ -1281,14 +1313,13 @@ void display()
       refX = ((dim * Sin(thf)) + fpX ) + carXIncrement;     
       refY = (dim * Sin(ph))+ fpY;
       refZ = (dim * -Cos(thf)) + fpZ + carZIncrement;
+      printf("%f\n", refY);
    
       glRotated(-carRotate,0,1,0);      
          gluLookAt(-1+carXIncrement, 0.9 ,-2.7+carZIncrement , 8.210370+carXIncrement,refY,-3.058857+carZIncrement, 0,1,0);  
 
    }
-
    //Draw scene
-   
    //Grass
    grass(1.5,-0.13,4,20);
    //Skybox
@@ -1331,15 +1362,15 @@ void display()
    cube(15,4,6.5, 0.07,0.02,0.1, 0);
    
    //Stand
-  // stand(1, 0.5, 2, 0.7, 8, 2);
+   texScale = 1.5;
+   stand(1, 0.5, 2, 1, 8, 2);
       
-   //Blue car
+                         /* Controlled Car */
    glPushMatrix();
       car(-1+carXIncrement,0.3,-2.7+carZIncrement, 1,1,1, carRotate, 0,0,0.8);
    glPopMatrix();
    
-  // carEnemy();
-   //green car
+                                      /* Opponent's Car */
    glPushMatrix();
       car(-1+centerXIncrement,0.3,-1+centerZIncrement, 1,1,1, carRotate2, 0,0.8,0);
    glPopMatrix();
