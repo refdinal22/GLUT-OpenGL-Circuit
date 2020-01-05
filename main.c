@@ -24,6 +24,7 @@
 #define ANGLE_TURN 6
 #define DAY 1
 #define NIGHT 0
+#define CAR_MOVE 70
 #endif
 
 int mode=0;       //  Projection mode
@@ -60,26 +61,27 @@ double fpY = 0.8;
 double fpZ = 0;
 
 float xPos = -6;
-int carRotate = 0;
+
 
 double xRotateTurn = 0;
 double ZRotateTurn = 0;
 double turnXInc = 0;
 double turnZInc = 0;
 
-//Camera
+//Enemy
 float centerXIncrement = 0;
 float centerZIncrement = 0;
 float xRotate = 0.5;
 float zRotate = 0;
-
-//Camera First
-float camRotateX = 0.5;
-float camRotateZ = 0;
-float cameraXIncrement = 0;
-float cameraZIncrement = 0;
-
 float carRotate2 = 0;
+
+//Person Control
+float carRotateX = 0.5;
+float carRotateZ = 0;
+float carXIncrement = 0;
+float carZIncrement = 0;
+float carRotate = 0;
+
 float temp;
 
 int degree = 15; 
@@ -107,15 +109,7 @@ GLuint	_textureBasicMetal, _textureGlass, _textureWheel, _textureTire,
 		_textureWarehouseWindow, _textureSupport;
 ;
 
-void initTexture() { 
-//     Ambient[0] = (20 / 255) * 0.8; 
-//      Ambient[1] = (60 / 255) * 0.8;
-//      Ambient[2] = (180 / 255) * 0.8;
-
-//      Diffuse[0] = 0;
-//      Diffuse[1] = 0;
-//      Diffuse[2] = 0;
-      
+void initTexture() {       
 	_textureSkyboxFront = LoadTexBMP("texture/skybox-front.bmp");
 	_textureSkyboxBack = LoadTexBMP("texture/skybox-back.bmp");
 	_textureSkyboxRight = LoadTexBMP("texture/skybox-right.bmp");
@@ -1146,11 +1140,42 @@ void setLighting(){
 }
 
 void control(int direction){
+     int degrees ,rotates, turn;
+     
+     switch(direction){
+        case 1:
+             degrees = 0;             rotates = 1;             turn = 0;      
+             step++;  
+             break;                  
+             
+        case 2:
+             degrees = 0;             rotates = -1;             turn = 0;             
+             break;
+             
+        case 3:
+             degrees = -ANGLE_TURN;    rotates = 1;              turn = -ANGLE_TURN;
+             step++;
+             break;
+             
+        default :
+             degrees = ANGLE_TURN;    rotates = 1;              turn = ANGLE_TURN;
+             break;   
+     }
+     
+        temp = xRotate;
+        xRotate = xRotate*Cos(degrees) + zRotate * Sin(degrees);
+        zRotate = -temp*Sin(degrees)+zRotate*Cos(degrees);
+        centerXIncrement += (xRotate * rotates);
+        centerZIncrement += (zRotate * rotates);
+        carRotate2 += turn;  
+}
+
+void personControl(int direction){
      int degree ,rotate, turn;
      
      switch(direction){
         case 1:
-             degree = 0;             rotate = 1;             turn = 0;        
+             degree = 0;             rotate = 1;             turn = 0;                  
              break;                  
              
         case 2:
@@ -1164,14 +1189,46 @@ void control(int direction){
         default :
              degree = ANGLE_TURN;    rotate = 1;              turn = ANGLE_TURN;
              break;   
+     }  
+        temp = carRotateX;
+        carRotateX = carRotateX*Cos(degree) + carRotateZ * Sin(degree);
+        carRotateZ = -temp*Sin(degree)+carRotateZ*Cos(degree);
+        carXIncrement += (carRotateX * rotate);
+        carZIncrement += (carRotateZ * rotate);
+        
+        carRotate += turn;  
+}
+
+void carEnemy(){
+     int i;
+
+     if(step >= 25 && step < 40){
+             control(3);                  
+     }  
+     else if(step >= 53 && step < 68){
+             control(3);                  
      }
-     
-     temp = xRotate;
-        xRotate = xRotate*Cos(degree) + zRotate * Sin(degree);
-        zRotate = -temp*Sin(degree)+zRotate*Cos(degree);
-        centerXIncrement += (xRotate * rotate);
-        centerZIncrement += (zRotate * rotate);
-        carRotate2 += turn;  
+     else if(step >= 108 && step < 123){
+             control(3);                  
+     }
+     else if(step >= 136 && step < 151){
+             control(3);                  
+     }
+     else if(step == 166)
+            step = 0;
+     else
+        control(1);
+   
+     printf("%d\n", step);      
+
+}
+
+void timer(int miliseconds) {
+	
+    carEnemy();
+	
+	glutPostRedisplay();
+	glutTimerFunc(CAR_MOVE, timer, 0);
 }
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -1221,12 +1278,13 @@ void display()
    //  First Person
    else
    {
-      refX = ((dim * Sin(thf)) + fpX ) + centerXIncrement;     
+      refX = ((dim * Sin(thf)) + fpX ) + carXIncrement;     
       refY = (dim * Sin(ph))+ fpY;
-      refZ = (dim * -Cos(thf)) + fpZ + centerZIncrement;
+      refZ = (dim * -Cos(thf)) + fpZ + carZIncrement;
    
-      glRotated(-carRotate2,0,1,0);      
-          gluLookAt(-1+centerXIncrement, 0.9 ,-2.7+centerZIncrement , 8.210370+centerXIncrement,refY,-3.058857+centerZIncrement, 0,1,0);          
+      glRotated(-carRotate,0,1,0);      
+         gluLookAt(-1+carXIncrement, 0.9 ,-2.7+carZIncrement , 8.210370+carXIncrement,refY,-3.058857+carZIncrement, 0,1,0);  
+
    }
 
    //Draw scene
@@ -1277,9 +1335,10 @@ void display()
       
    //Blue car
    glPushMatrix();
-      car(-1+centerXIncrement,0.3,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
+      car(-1+carXIncrement,0.3,-2.7+carZIncrement, 1,1,1, carRotate, 0,0,0.8);
    glPopMatrix();
    
+  // carEnemy();
    //green car
    glPushMatrix();
       car(-1+centerXIncrement,0.3,-1+centerZIncrement, 1,1,1, carRotate2, 0,0.8,0);
@@ -1308,18 +1367,12 @@ void special(int key,int x,int y)
 {
    //  Right arrow key - increase angle by 5 degrees
    if (key == GLUT_KEY_RIGHT)
-    {  th += 5;
-       carRotate -= 5; 
+      th += 5;      
       
-      }
    
    //  Left arrow key - decrease angle by 5 degrees
    else if (key == GLUT_KEY_LEFT)
-      {th -= 5;
-      step++;
-      printf("%f\n", refX);
-      printf("%f\n", refZ);
-      }
+      th -= 5;
    
    //  Up arrow key - increase elevation by 5 degrees
    else if (key == GLUT_KEY_UP)
@@ -1362,23 +1415,21 @@ void key(unsigned char ch,int x,int y)
       
    else if(ch == 'w' || ch == 'W')
    {      
-       control(1);
+       personControl(1);
    }
    
    else if(ch == 's' || ch == 'S')
    {      
-       control(2);  
+       personControl(2);  
    }
       
    else if(ch == 'd' || ch == 'D')
       {
-        control(3);          
-          step++;
-          
+        personControl(3);          
       }
    else if(ch == 'a' || ch == 'A')
    {
-         control(4);
+         personControl(4);
    }   
          
    th %= 360;        
@@ -1417,6 +1468,7 @@ int main(int argc,char* argv[])
    glutReshapeFunc(reshape);
    glutSpecialFunc(special);
    glutKeyboardFunc(key);
+   glutTimerFunc(CAR_MOVE, timer, 0);
    
    initTexture();
    
