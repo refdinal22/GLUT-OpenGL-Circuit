@@ -72,8 +72,8 @@ float zRotate = 0;
 //Camera First
 float camRotateX = 0.5;
 float camRotateZ = 0;
-float cameraXIncrement = -3.5;
-float cameraZIncrement = 2.3;
+float cameraXIncrement = 0;
+float cameraZIncrement = 0;
 
 float carRotate2 = 0;
 float temp;
@@ -104,13 +104,13 @@ GLuint	_textureBasicMetal, _textureGlass, _textureWheel, _textureTire,
 ;
 
 void initTexture() { 
-     Ambient[0] = (20 / 255) * 0.8; 
-      Ambient[1] = (60 / 255) * 0.8;
-      Ambient[2] = (180 / 255) * 0.8;
+//     Ambient[0] = (20 / 255) * 0.8; 
+//      Ambient[1] = (60 / 255) * 0.8;
+//      Ambient[2] = (180 / 255) * 0.8;
 
-      Diffuse[0] = 0;
-      Diffuse[1] = 0;
-      Diffuse[2] = 0;
+//      Diffuse[0] = 0;
+//      Diffuse[1] = 0;
+//      Diffuse[2] = 0;
       
 	_textureSkyboxFront = LoadTexBMP("texture/skybox-front.bmp");
 	_textureSkyboxBack = LoadTexBMP("texture/skybox-back.bmp");
@@ -131,6 +131,7 @@ void initTexture() {
 	_textureGlass = LoadTexBMP("texture/glass.bmp");
 	_textureCarbonFiber = LoadTexBMP("texture/carbon-fiber.bmp");
 	_textureGreyBrick = LoadTexBMP("texture/grey-brick.bmp");
+	_textureGrass = LoadTexBMP("texture/grass.bmp");
 }
 
 static void cube(double x,double y,double z,
@@ -578,7 +579,7 @@ static void car(double x,double y,double z,
    //Lower Body
    body(0,0.1,0, 0.8,0.1,0.4, 0, 0);
    //Cabin
-   glColor3f(cr, cb, cg);
+   body(-0.1,0.3,0, 0.3,0.1,0.35, 0, 1);
   
    texScale = 1.0;
 
@@ -1054,7 +1055,19 @@ void stand(double x, double y, double z, double height, double width, double lz)
      glPopMatrix();
 }
 
-
+void grass(double x, double y, double z, double width){
+        float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,1);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   
+   glColor3f(1, 1, 1);       
+     glBindTexture(GL_TEXTURE_2D, _textureGrass);    
+     glPushMatrix();
+        cube(x, y, z, width, 0.17, width, 0);
+     glPopMatrix();
+}
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
  */
@@ -1067,7 +1080,6 @@ void display()
 
    //Enable Textures
    glEnable(GL_TEXTURE_2D);
-//   glEnable(GL_NORMALIZE);
 
    //  Undo previous transformations
    glLoadIdentity();
@@ -1109,11 +1121,13 @@ void display()
       refZ = (dim * -Cos(thf)) + fpZ + centerZIncrement;
    
       glRotated(-carRotate2,0,1,0);      
-//        gluLookAt(-1+centerXIncrement, 0.8 ,2.3+centerZIncrement , 8.210370+centerXIncrement,refY,1.941143+centerZIncrement, 0,1,0);          
-          gluLookAt(-1+centerXIncrement, 0.8 ,-2.7+centerZIncrement , 8.210370+centerXIncrement,refY,-3.058857+centerZIncrement, 0,1,0);          
+          gluLookAt(-1+centerXIncrement, 0.9 ,-2.7+centerZIncrement , 8.210370+centerXIncrement,refY,-3.058857+centerZIncrement, 0,1,0);          
    }
 
    //Draw scene
+   
+   //Grass
+   grass(0,-0.13,0,20);
    //Skybox
    skybox(64);
    
@@ -1136,27 +1150,25 @@ void display()
    glPopMatrix();
    
    //Draw Circuit  
-   //road(2, 0, -0.5);
-   
    circuit();
    
    //Light
-   int i=0;
-   while(i<20){
-      lightRoad(-6+i, 0.3, 0.8);
-      i+=4;
-   }
+   //int i=0;
+   //while(i<20){
+   //   lightRoad(-6+i, 0.3, 0.8);
+   //   i+=4;
+   //}
    
    //Stand
   // stand(1, 0.5, 2, 0.7, 8, 2);
       
    //Blue car
    glPushMatrix();
-      car(-1+centerXIncrement,0.2,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
+      car(-1+centerXIncrement,0.3,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
    glPopMatrix();
    
    glPushMatrix();
-      car(-1+centerXIncrement,0.2,-1+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
+      car(2+centerXIncrement,0.3,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
    glPopMatrix();
       
    texScale = 0.5;
