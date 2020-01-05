@@ -2,6 +2,7 @@
  *  UAS Refdinal 171511023
  *
  *  p             Toggles first person/perspective projection
+ *  c             Change Day and Night
  *  arrow keys    Change view angle
  *  ESC           Exit
  *
@@ -21,6 +22,8 @@
 #define CUBE_BOTTOM_LEFT 3
 #define CUBE_BOTTOM_RIGHT 4
 #define ANGLE_TURN 6
+#define DAY 1
+#define NIGHT 0
 #endif
 
 int mode=0;       //  Projection mode
@@ -44,6 +47,7 @@ int shininess =   0;  // Shininess (power of two)
 float shiny   =   1;  // Shininess (value)
 int zh        =  0;  // Light azimuth
 float ylight  = 13;  // Elevation of light
+int earth = DAY; //Day and Night
 
 int at0=100;      //  Constant  attenuation %
 int at1=20;        //  Linear    attenuation %
@@ -78,7 +82,7 @@ float cameraZIncrement = 0;
 float carRotate2 = 0;
 float temp;
 
-   int degree = 15; 
+int degree = 15; 
 //x, y, z for refrence point in glLookAt() for FP mode
 double refX = 0;
 double refY = 0;
@@ -994,7 +998,6 @@ static void circuit(){
       straightRoad(-11+inc, -0.05, -2, 2, 0, 0);
       inc+=4;
    }
-//   straightRoad(-7, -0.05, -2, 2, 0, 0);
    //Turn 1
    turnRoad(14, -0.05, -2, 1);
    //Straight 2
@@ -1014,7 +1017,6 @@ static void circuit(){
    //Straight 3
    glPushMatrix();
       glTranslated(0.5,0,17.8);
-//      straightRoad(1, -0.05, -2, 12, 0, 0);
        inc=2;
        for(i=0;i<6;i++){
          straightRoad(-11+inc, -0.05, -2, 2, 0, 0);
@@ -1032,7 +1034,6 @@ static void circuit(){
    glPushMatrix();
       glTranslated(-12.3,0,7.8);
       glRotated(90,0,1,0);
-      //straightRoad(1, -0.05, -2, 5, 0, 0);
       for(i=0;i<9;i++){
         straightRoad(-3+i, -0.05, -2, 1, 0, 0);
       }
@@ -1067,6 +1068,38 @@ void grass(double x, double y, double z, double width){
      glPushMatrix();
         cube(x, y, z, width, 0.17, width, 0);
      glPopMatrix();
+}
+
+void setLighting(){
+     if(earth == DAY){
+        Ambient[0] = 0.8;           Ambient[1] = 0.8;          Ambient[2] = 0.8;
+        Diffuse[0] = 1;          Diffuse[1] = 1;          Diffuse[2] = 1;
+        //Disable Lighting
+        glDisable(GL_LIGHT1);     
+     }     
+     else{
+          //Setting For Night
+          Ambient[0] = (20 / 255) * 0.8;           Ambient[1] = (60 / 255) * 0.8;          Ambient[2] = (180 / 255) * 0.8;
+          Diffuse[0] = 0;          Diffuse[1] = 0;          Diffuse[2] = 0;
+          //Car Light          
+          glEnable(GL_LIGHT1);
+          float amb[4] = {0,0,0,0};
+          float dif[4] = {1,1,1,1}; //White
+          float spec[4] = {0,0,0,1};
+        //  glPushMatrix();   
+
+              float carPosition[4] = {-1+centerXIncrement,0.8,-2.7+centerZIncrement,1.0};
+              //White Light
+              glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);
+              glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
+              glLightfv(GL_LIGHT1,GL_SPECULAR,spec);
+              glLightfv(GL_LIGHT1,GL_POSITION,carPosition);
+        
+              glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION ,at0/100.0);
+              glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION   ,at1/100.0);
+              glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,at2/100.0);
+          //glPopMatrix();      
+     }
 }
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -1127,7 +1160,7 @@ void display()
    //Draw scene
    
    //Grass
-   grass(0,-0.13,0,20);
+   grass(1.5,-0.13,4,20);
    //Skybox
    skybox(64);
    
@@ -1172,31 +1205,7 @@ void display()
    glPopMatrix();
       
    texScale = 0.5;
-   glEnable(GL_LIGHT1);
-     glPushMatrix();
-      
-      float amb[4] = {0,0,0,0};
-      float dif[4] = {1,1,1,1}; //White
-      float spec[4] = {0,0,0,1};
-      float pos[4] = {-1+centerXIncrement,0.8,-2.7+centerZIncrement,1.0};
-      //Red Light
-      glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);
-      glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
-      glLightfv(GL_LIGHT1,GL_SPECULAR,spec);
-      glLightfv(GL_LIGHT1,GL_POSITION,pos);
-
-      glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION ,at0/100.0);
-      glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION   ,at1/100.0);
-      glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,at2/100.0);
-
-      //Red Light
-      float redEm[4] = {1,1,1,1};
-      glMaterialf(GL_FRONT,GL_SHININESS,0);
-      glMaterialfv(GL_FRONT,GL_SPECULAR,redEm);
-      glMaterialfv(GL_FRONT,GL_EMISSION,redEm);
-      glColor3f(0.5, 0, 0);
-      cube(-1+centerXIncrement,0.5,-2.7+centerZIncrement, 0.07,0.02,0.1, 0);
-   glPopMatrix(); 
+   setLighting();
 
    glutSwapBuffers();
    
@@ -1265,6 +1274,11 @@ void key(unsigned char ch,int x,int y)
    //  Switch projection mode
    else if (ch == 'p' || ch == 'P')
       mode = 1-mode;
+      
+   // Switch Day   
+   else if (ch == 'c' || ch == 'C')
+      earth = 1-earth;
+      
    else if(ch == 'w' || ch == 'W')
    {      
           temp = xRotate;
@@ -1293,7 +1307,7 @@ void key(unsigned char ch,int x,int y)
           centerXIncrement += xRotate;
           centerZIncrement += zRotate;
           
-          thf += 15;
+       //   thf += 15;
           carRotate2 -= ANGLE_TURN;
           step++;
           
