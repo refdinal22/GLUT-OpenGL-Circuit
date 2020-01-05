@@ -1083,23 +1083,95 @@ void setLighting(){
           Diffuse[0] = 0;          Diffuse[1] = 0;          Diffuse[2] = 0;
           //Car Light          
           glEnable(GL_LIGHT1);
+          glEnable(GL_LIGHT2);
+          glEnable(GL_LIGHT3);    
+          glEnable(GL_LIGHT4);
+          glEnable(GL_LIGHT5);
+          glEnable(GL_LIGHT6);
+          
           float amb[4] = {0,0,0,0};
           float dif[4] = {1,1,1,1}; //White
           float spec[4] = {0,0,0,1};
-        //  glPushMatrix();   
-
-              float carPosition[4] = {-1+centerXIncrement,0.8,-2.7+centerZIncrement,1.0};
-              //White Light
-              glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);
-              glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
-              glLightfv(GL_LIGHT1,GL_SPECULAR,spec);
-              glLightfv(GL_LIGHT1,GL_POSITION,carPosition);
+         
+//Light lampu mobil
+//float carPosition[4] = {-1+centerXIncrement,0.8,-2.7+centerZIncrement,1.0};
+         float ligthStand1[4] = {-4,6,-2.7, 1.0};
+         //White Light
+         glLightfv(GL_LIGHT1,GL_AMBIENT ,amb);              glLightfv(GL_LIGHT1,GL_DIFFUSE ,dif);
+         glLightfv(GL_LIGHT1,GL_SPECULAR,spec);              glLightfv(GL_LIGHT1,GL_POSITION,ligthStand1);
         
-              glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION ,at0/100.0);
-              glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION   ,at1/100.0);
-              glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,at2/100.0);
-          //glPopMatrix();      
+         glLightf(GL_LIGHT1,GL_CONSTANT_ATTENUATION ,at0/100.0);              glLightf(GL_LIGHT1,GL_LINEAR_ATTENUATION   ,at1/100.0);
+         glLightf(GL_LIGHT1,GL_QUADRATIC_ATTENUATION,at2/100.0);
+  
+          float ligthStand2[4] = {5.5,6,-2.7, 1.0};
+          //White Light
+          glLightfv(GL_LIGHT2,GL_AMBIENT ,amb);          glLightfv(GL_LIGHT2,GL_DIFFUSE ,dif);
+          glLightfv(GL_LIGHT2,GL_SPECULAR,spec);          glLightfv(GL_LIGHT2,GL_POSITION,ligthStand2);
+        
+          glLightf(GL_LIGHT2,GL_CONSTANT_ATTENUATION ,at0/100.0);          glLightf(GL_LIGHT2,GL_LINEAR_ATTENUATION   ,at1/100.0);
+          glLightf(GL_LIGHT2,GL_QUADRATIC_ATTENUATION,at2/100.0);
+          
+          float ligthStand3[4] = {-4,6,15.7, 1.0};
+          //White Light
+          glLightfv(GL_LIGHT3,GL_AMBIENT ,amb);          glLightfv(GL_LIGHT3,GL_DIFFUSE ,dif);
+          glLightfv(GL_LIGHT3,GL_SPECULAR,spec);          glLightfv(GL_LIGHT3,GL_POSITION,ligthStand3);
+        
+          glLightf(GL_LIGHT3,GL_CONSTANT_ATTENUATION ,at0/100.0);          glLightf(GL_LIGHT3,GL_LINEAR_ATTENUATION   ,at1/100.0);
+          glLightf(GL_LIGHT3,GL_QUADRATIC_ATTENUATION,at2/100.0);
+          
+          float ligthStand4[4] = {5.5,6,15.7, 1.0};
+          //White Light
+          glLightfv(GL_LIGHT4,GL_AMBIENT ,amb);          glLightfv(GL_LIGHT4,GL_DIFFUSE ,dif);
+          glLightfv(GL_LIGHT4,GL_SPECULAR,spec);          glLightfv(GL_LIGHT4,GL_POSITION,ligthStand4);
+        
+          glLightf(GL_LIGHT4,GL_CONSTANT_ATTENUATION ,at0/100.0);          glLightf(GL_LIGHT4,GL_LINEAR_ATTENUATION   ,at1/100.0);
+          glLightf(GL_LIGHT4,GL_QUADRATIC_ATTENUATION,at2/100.0);
+          
+          float ligthStand5[4] = {-14.7,6,6.5, 1.0};
+          //White Light
+          glLightfv(GL_LIGHT5,GL_AMBIENT ,amb);          glLightfv(GL_LIGHT5,GL_DIFFUSE ,dif);
+          glLightfv(GL_LIGHT5,GL_SPECULAR,spec);          glLightfv(GL_LIGHT5,GL_POSITION,ligthStand5);
+        
+          glLightf(GL_LIGHT5,GL_CONSTANT_ATTENUATION ,at0/100.0);          glLightf(GL_LIGHT5,GL_LINEAR_ATTENUATION   ,at1/100.0);
+          glLightf(GL_LIGHT5,GL_QUADRATIC_ATTENUATION,at2/100.0);
+          
+          float ligthStand6[4] = {17.7,6,6.5, 1.0};
+          //White Light
+          glLightfv(GL_LIGHT6,GL_AMBIENT ,amb);          glLightfv(GL_LIGHT6,GL_DIFFUSE ,dif);
+          glLightfv(GL_LIGHT6,GL_SPECULAR,spec);          glLightfv(GL_LIGHT6,GL_POSITION,ligthStand6);
+        
+          glLightf(GL_LIGHT6,GL_CONSTANT_ATTENUATION ,at0/100.0);          glLightf(GL_LIGHT6,GL_LINEAR_ATTENUATION   ,at1/100.0);
+          glLightf(GL_LIGHT6,GL_QUADRATIC_ATTENUATION,at2/100.0);
      }
+}
+
+void control(int direction){
+     int degree ,rotate, turn;
+     
+     switch(direction){
+        case 1:
+             degree = 0;             rotate = 1;             turn = 0;        
+             break;                  
+             
+        case 2:
+             degree = 0;             rotate = -1;             turn = 0;             
+             break;
+             
+        case 3:
+             degree = -ANGLE_TURN;    rotate = 1;              turn = -ANGLE_TURN;
+             break;
+             
+        default :
+             degree = ANGLE_TURN;    rotate = 1;              turn = ANGLE_TURN;
+             break;   
+     }
+     
+     temp = xRotate;
+        xRotate = xRotate*Cos(degree) + zRotate * Sin(degree);
+        zRotate = -temp*Sin(degree)+zRotate*Cos(degree);
+        centerXIncrement += (xRotate * rotate);
+        centerZIncrement += (zRotate * rotate);
+        carRotate2 += turn;  
 }
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -1186,11 +1258,19 @@ void display()
    circuit();
    
    //Light
-   //int i=0;
-   //while(i<20){
-   //   lightRoad(-6+i, 0.3, 0.8);
-   //   i+=4;
-   //}
+   float redEm[4] = {1,1,1,1};
+   glMaterialf(GL_FRONT,GL_SHININESS,0);
+   glMaterialfv(GL_FRONT,GL_SPECULAR,redEm);
+   glMaterialfv(GL_FRONT,GL_EMISSION,redEm);
+   glColor3f(0.5, 0, 0);
+   
+   cube(-4,4,0, 0.07,0.02,0.1, 0);
+   cube(5.5,4,0, 0.07,0.02,0.1, 0);
+   cube(-4,4,13, 0.07,0.02,0.1, 0);
+   cube(5.5,4,13, 0.07,0.02,0.1, 0);
+   
+   cube(-12,4,6.5, 0.07,0.02,0.1, 0);
+   cube(15,4,6.5, 0.07,0.02,0.1, 0);
    
    //Stand
   // stand(1, 0.5, 2, 0.7, 8, 2);
@@ -1200,8 +1280,9 @@ void display()
       car(-1+centerXIncrement,0.3,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
    glPopMatrix();
    
+   //green car
    glPushMatrix();
-      car(2+centerXIncrement,0.3,-2.7+centerZIncrement, 1,1,1, carRotate2, 0,0,0.8);
+      car(-1+centerXIncrement,0.3,-1+centerZIncrement, 1,1,1, carRotate2, 0,0.8,0);
    glPopMatrix();
       
    texScale = 0.5;
@@ -1281,45 +1362,23 @@ void key(unsigned char ch,int x,int y)
       
    else if(ch == 'w' || ch == 'W')
    {      
-          temp = xRotate;
-          xRotate = xRotate*Cos(0) + zRotate * Sin(0);
-          zRotate = -temp*Sin(0)+zRotate*Cos(0);
-          centerXIncrement += xRotate;
-          centerZIncrement += zRotate;
-          carRotate2 += 0;
+       control(1);
    }
    
    else if(ch == 's' || ch == 'S')
    {      
-          temp = xRotate;
-          xRotate = xRotate*Cos(0) + zRotate * Sin(0);
-          zRotate = -temp*Sin(0)+zRotate*Cos(0);
-          centerXIncrement -= xRotate;
-          centerZIncrement -= zRotate;
-          carRotate2 += 0;
+       control(2);  
    }
       
    else if(ch == 'd' || ch == 'D')
       {
-          temp = xRotate;
-          xRotate = xRotate*Cos(-ANGLE_TURN) + zRotate * Sin(-ANGLE_TURN);
-          zRotate = -temp*Sin(-ANGLE_TURN)+zRotate*Cos(-ANGLE_TURN);
-          centerXIncrement += xRotate;
-          centerZIncrement += zRotate;
-          
-       //   thf += 15;
-          carRotate2 -= ANGLE_TURN;
+        control(3);          
           step++;
           
       }
    else if(ch == 'a' || ch == 'A')
    {
-          temp = xRotate;          
-          xRotate = xRotate*Cos(ANGLE_TURN) + zRotate * Sin(ANGLE_TURN);
-          zRotate = -temp*Sin(ANGLE_TURN)+zRotate*Cos(ANGLE_TURN);
-          centerXIncrement += xRotate;
-          centerZIncrement += zRotate;
-          carRotate2 += ANGLE_TURN;    
+         control(4);
    }   
          
    th %= 360;        
