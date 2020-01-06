@@ -5,7 +5,10 @@
  *  c             Change Day and Night
  *  arrow keys    Change view angle
  *  ESC           Exit
- *
+ *  w             Up
+ *  a             Turn Left
+ *  s             Back
+ *  d             Turn Right
  */
 #include "JTKPOLBAN.h"
 #include "loadtexbmp.c"
@@ -1385,13 +1388,24 @@ void display()
       glRotated(-90,0,1,0);
       lightRoad(10.5,0,-1.5); 
    glPopMatrix();
-       
-       cube(-12,4,6.5, 0.07,0.02,0.1, 0);
-       cube(15,4,6.5, 0.07,0.02,0.1, 0);
    
    //Stand
    texScale = 1.5;
    stand(1, 0.5, 2, 1, 8, 2);
+   
+   //Support
+   texScale = 0.3;
+   float white[] = {1,1,1,1};
+   float black[] = {0,0,0,1};
+   
+   glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,shiny);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,white);
+   glMaterialfv(GL_FRONT_AND_BACK,GL_EMISSION,black);
+   
+   glColor3f(0.7, 0.7, 0.7);
+   glBindTexture(GL_TEXTURE_2D,_textureSupport);   
+   cube(1, 0.5, -4, 6,0.3,0.1, 0);
+   
       
                          /* Controlled Car */
    glPushMatrix();
