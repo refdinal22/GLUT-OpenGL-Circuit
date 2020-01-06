@@ -84,7 +84,9 @@ float carRotate = 0;
 
 float temp;
 
-int degree = 15; 
+//Race
+int start = 0;
+
 //x, y, z for refrence point in glLookAt() for FP mode
 double refX = 0;
 double refY = 0;
@@ -781,11 +783,21 @@ static void road(double x, double y, double z)
 
 static void lightRoad(double x, double y, double z)
 {
-   glBindTexture(GL_TEXTURE_2D,_textureAsphalt);
-   glPushMatrix();
+   glBindTexture(GL_TEXTURE_2D,_textureHeadLamp);
+   texScale = 0.1;
+   glPushMatrix();   
+      // cube(-4,4,13, 0.07,0.02,0.1, 0);
       glTranslated(x,y,z);
-      cube(0,-0.05,-0.5, 0.3,0.5,0.3, 0);
+      glRotated(5,1,0,0);
+      cube(-4,4,13, 1.5,0.5,0.1, 0);
    glPopMatrix();
+   
+   glBindTexture(GL_TEXTURE_2D, _textureBasicMetal);
+   glPushMatrix();   
+      glTranslated(x,y,z);
+      cube(-4,1.6,13.2, 0.1 ,1.6,0.1, 0);
+   glPopMatrix();
+   
 }
 
 static void pitstop(double x, double y, double z)
@@ -1256,8 +1268,9 @@ void carEnemy(){
 }
 
 void timer(int miliseconds) {
-	
-    carEnemy();
+     
+   	if(start)
+        carEnemy();
 	
 	glutPostRedisplay();
 	glutTimerFunc(CAR_MOVE, timer, 0);
@@ -1351,15 +1364,30 @@ void display()
    glMaterialf(GL_FRONT,GL_SHININESS,0);
    glMaterialfv(GL_FRONT,GL_SPECULAR,redEm);
    glMaterialfv(GL_FRONT,GL_EMISSION,redEm);
+   
    glColor3f(0.5, 0, 0);
    
-   cube(-4,4,0, 0.07,0.02,0.1, 0);
-   cube(5.5,4,0, 0.07,0.02,0.1, 0);
-   cube(-4,4,13, 0.07,0.02,0.1, 0);
-   cube(5.5,4,13, 0.07,0.02,0.1, 0);
+   glPushMatrix();
+       glBindTexture(GL_TEXTURE_2D,_textureHeadLamp);   
+           cube(-4,4,0, 0.07,0.02,0.1, 0);
+           cube(5.5,4,0, 0.07,0.02,0.1, 0);
+   glPopMatrix();
    
-   cube(-12,4,6.5, 0.07,0.02,0.1, 0);
-   cube(15,4,6.5, 0.07,0.02,0.1, 0);
+   lightRoad(0,0,0);
+   lightRoad(9.5,0,0);
+   
+   glPushMatrix();
+      glRotated(90,0,1,0);
+      lightRoad(-2.5,0,1.5);   
+   glPopMatrix();
+   
+   glPushMatrix();
+      glRotated(-90,0,1,0);
+      lightRoad(10.5,0,-1.5); 
+   glPopMatrix();
+       
+       cube(-12,4,6.5, 0.07,0.02,0.1, 0);
+       cube(15,4,6.5, 0.07,0.02,0.1, 0);
    
    //Stand
    texScale = 1.5;
@@ -1446,6 +1474,9 @@ void key(unsigned char ch,int x,int y)
       
    else if(ch == 'w' || ch == 'W')
    {      
+       if(!start)   
+           start = 1;
+           
        personControl(1);
    }
    
