@@ -37,7 +37,9 @@ int ph=0;         //  Elevation of view angle
 int fov=55;       //  Field of view (for perspective)
 int light=1;      //  Lighting
 double asp=1.333;  //  Aspect ratio
-double dim=11;   //  Size of world
+double dim=15;   //  Size of world
+
+int carMove = 70;
 
 // Light values
 int one       =   1;  // Unit value
@@ -77,6 +79,13 @@ float centerZIncrement = 0;
 float xRotate = 0.5;
 float zRotate = 0;
 float carRotate2 = 0;
+
+//Enemy
+float centerXIncrement2 = 0;
+float centerZIncrement2 = 0;
+float xRotate2 = 0.5;
+float zRotate2 = 0;
+float carRotate3 = 0;
 
 //Person Control
 float carRotateX = 0.5;
@@ -1132,6 +1141,7 @@ void setLighting(){
           float amb[4] = {0,0,0,0};
           float dif[4] = {1,1,1,1}; //White
           float spec[4] = {0,0,0,1};
+          float spec2[4] = {1,1,1,1};
          
 //Light lampu mobil
 //float carPosition[4] = {-1+centerXIncrement,0.8,-2.7+centerZIncrement,1.0};
@@ -1187,25 +1197,25 @@ void setLighting(){
 }
 
 void control(int direction){
-     int degrees ,rotates, turn;
+     int degrees ,rotates, turn, speed;
      
      switch(direction){
         case 1:
-             degrees = 0;             rotates = 1;             turn = 0;      
+             degrees = 0;             rotates = 1;             turn = 0;   speed = 2;     
              step++;  
              break;                  
              
         case 2:
-             degrees = 0;             rotates = -1;             turn = 0;             
+             degrees = 0;             rotates = -1;             turn = 0;       speed = 1;      
              break;
              
         case 3:
-             degrees = -ANGLE_TURN;    rotates = 1;              turn = -ANGLE_TURN;
+             degrees = -ANGLE_TURN;    rotates = 1;              turn = -ANGLE_TURN;  speed = 1;
              step++;
              break;
              
         default :
-             degrees = ANGLE_TURN;    rotates = 1;              turn = ANGLE_TURN;
+             degrees = ANGLE_TURN;    rotates = 1;              turn = ANGLE_TURN;    speed = 1;
              break;   
      }
      
@@ -1216,6 +1226,38 @@ void control(int direction){
         centerZIncrement += (zRotate * rotates);
         carRotate2 += turn;  
 }
+
+void control2(int direction){
+     int degrees ,rotates, turn, speed;
+     
+     switch(direction){
+        case 1:
+             degrees = 0;             rotates = 1;             turn = 0;   speed = 2;     
+             //step++;  
+             break;                  
+             
+        case 2:
+             degrees = 0;             rotates = -1;             turn = 0;       speed = 1;      
+             break;
+             
+        case 3:
+             degrees = -ANGLE_TURN;    rotates = 1;              turn = -ANGLE_TURN;  speed = 1;
+             //step++;
+             break;
+             
+        default :
+             degrees = ANGLE_TURN;    rotates = 1;              turn = ANGLE_TURN;    speed = 1;
+             break;   
+     }
+     
+        temp = xRotate2;
+        xRotate2 = xRotate2*Cos(degrees) + zRotate2 * Sin(degrees);
+        zRotate2 = -temp*Sin(degrees)+zRotate2*Cos(degrees);
+        centerXIncrement2 += (xRotate * rotates);
+        centerZIncrement2 += (zRotate * rotates);
+        carRotate3 += turn;  
+}
+
 
 void personControl(int direction){
      int degree ,rotate, turn;
@@ -1250,21 +1292,62 @@ void carEnemy(){
      int i;
 
      if(step >= 25 && step < 40){
+             carMove = 70;
              control(3);                  
      }  
      else if(step >= 53 && step < 68){
+             carMove = 70;
              control(3);                  
      }
      else if(step >= 108 && step < 123){
+                       carMove = 70;
              control(3);                  
      }
      else if(step >= 136 && step < 151){
+                       carMove = 70;
              control(3);                  
      }
-     else if(step == 166)
-            step = 0;
-     else
+     else if(step == 166){
+                  
+            step = 0;}
+     else{
+          carMove = 25;
         control(1);
+//        control(1);
+     }
+   
+     printf("%d\n", step);      
+
+}
+
+
+void carEnemy2(){
+     int i;
+
+     if(step >= 20 && step < 34){
+             carMove = 70;
+             control2(3);                  
+     }  
+     else if(step >= 53 && step < 68){
+             carMove = 70;
+             control2(3);                  
+     }
+     else if(step >= 108 && step < 123){
+                       carMove = 70;
+             control2(3);                  
+     }
+     else if(step >= 136 && step < 151){
+                       carMove = 70;
+             control2(3);                  
+     }
+     else if(step == 166){
+                  
+            step = 0;}
+     else{
+          carMove = 30;
+          control2(1);
+//        control(1);
+     }
    
      printf("%d\n", step);      
 
@@ -1272,11 +1355,14 @@ void carEnemy(){
 
 void timer(int miliseconds) {
      
-   	if(start)
+   	if(start){
         carEnemy();
+                carEnemy2();
+        
+        }
 	
 	glutPostRedisplay();
-	glutTimerFunc(CAR_MOVE, timer, 0);
+	glutTimerFunc(carMove, timer, 0);
 }
 /*
  *  OpenGL (GLUT) calls this routine to display the scene
@@ -1326,14 +1412,14 @@ void display()
    //  First Person
    else
    {
+      ph = 0;
       refX = ((dim * Sin(thf)) + fpX ) + carXIncrement;     
       refY = (dim * Sin(ph))+ fpY;
       refZ = (dim * -Cos(thf)) + fpZ + carZIncrement;
       printf("%f\n", refY);
    
       glRotated(-carRotate,0,1,0);      
-         gluLookAt(-1+carXIncrement, 0.9 ,-2.7+carZIncrement , 8.210370+carXIncrement,refY,-3.058857+carZIncrement, 0,1,0);  
-
+         gluLookAt(-1+carXIncrement, 0.9 ,-3+carZIncrement , 8.210370+carXIncrement,refY,-3.058857+carZIncrement, 0,1,0);  
    }
    //Draw scene
    //Grass
@@ -1409,12 +1495,18 @@ void display()
       
                          /* Controlled Car */
    glPushMatrix();
-      car(-1+carXIncrement,0.3,-2.7+carZIncrement, 1,1,1, carRotate, 0,0,0.8);
+      car(-1+carXIncrement,0.3,-3+carZIncrement, 1,1,1, carRotate, 0,0,0.8);
    glPopMatrix();
    
                                       /* Opponent's Car */
    glPushMatrix();
       car(-1+centerXIncrement,0.3,-1+centerZIncrement, 1,1,1, carRotate2, 0,0.8,0);
+   glPopMatrix();
+   
+                                         /* Opponent's Car */
+   glPushMatrix();
+
+      car(-1-centerXIncrement,0.3,-2+centerZIncrement, 1,1,1, 180-carRotate2, 0,0,0);
    glPopMatrix();
       
    texScale = 0.5;
